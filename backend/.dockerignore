@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv
+venv
+env
+
+# Logs
+*.log
+
+# Local env files
+.env
+.env.*
+
+# Tests (se quiser excluir da imagem)
+tests/
+
+# Node (caso exista dentro do backend)
+node_modules
+
+# MacOS
+.DS_Store

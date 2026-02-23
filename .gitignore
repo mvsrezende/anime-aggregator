@@ -1,0 +1,72 @@
+# =========================
+# General
+# =========================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# =========================
+# FastAPI / Backend
+# =========================
+.env
+.env.*
+*.sqlite3
+
+# Alembic (keep versions folder!)
+alembic/versions/*.pyc
+
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
+frontend/node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Vite
+vite.config.ts.timestamp-*
+
+# =========================
+# Docker
+# =========================
+*.pid
+*.seed
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS / Misc
+# =========================
+*.bak
+*.orig
