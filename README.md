@@ -5,6 +5,8 @@ Projeto desenvolvido para a disciplina:
 
 **Projetos supervisionados em Desenvolvimento de software, apps, sites ou hardware [26E1-26E2]**
 
+Trello do projeto: https://trello.com/b/rqv7FWpm/anime-aggregatorprojetos-supervisionados-em-desenvolvimento-de-software-apps-sites-ou-hardware-26e1-26e2
+
 # 👨‍💻 Autor
 
 Marcos Vinícius Souza de Rezende  
