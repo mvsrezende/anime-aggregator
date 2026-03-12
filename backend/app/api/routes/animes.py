@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from typing import Optional
 
+from app.api.deps import DbSession, get_current_user
 from app.clients.jikan import JikanClient
+from app.models.search_history import SearchHistory
+from app.models.user import User
 from app.schemas.anime import AnimeListItem, AnimeSearchResponse
 from app.services.anime_service import normalize_list, normalize_single
 
@@ -12,11 +15,21 @@ client = JikanClient()
 
 @router.get("/search", response_model=AnimeSearchResponse)
 async def search_animes(
+    db: DbSession,
     q: str = Query(min_length=1, max_length=100),
     page: int = Query(default=1, ge=1, le=1000),
     limit: int = Query(default=12, ge=1, le=25),
+    current_user: User = Depends(get_current_user),
 ):
     payload = await client.search_anime(q=q, page=page, limit=limit)
+
+    search_entry = SearchHistory(
+        user_id=current_user.id,
+        query=q.strip(),
+    )
+    db.add(search_entry)
+    db.commit()
+
     return normalize_list(payload, page=page, limit=limit)
 
 
