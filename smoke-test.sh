@@ -135,4 +135,22 @@ if [ "$LATEST_QUERY" != "death note" ]; then
 fi
 echo "OK"
 
-echo "✅ Sprint 2 smoke test passed"
+echo "==> Cache should MISS then HIT"
+docker exec -i anime_db psql -U anime -d anime -c "DELETE FROM anime_cache WHERE anime_id = 5114 AND source = 'jikan';" >/dev/null
+
+FIRST_CACHE=$(curl -i -s "$BASE_URL/animes/5114" | tr -d '\r' | grep -i '^x-cache:' | awk '{print $2}')
+SECOND_CACHE=$(curl -i -s "$BASE_URL/animes/5114" | tr -d '\r' | grep -i '^x-cache:' | awk '{print $2}')
+
+if [ "$FIRST_CACHE" != "MISS" ]; then
+  echo "Esperava MISS na primeira chamada, mas recebi: $FIRST_CACHE"
+  exit 1
+fi
+
+if [ "$SECOND_CACHE" != "HIT" ]; then
+  echo "Esperava HIT na segunda chamada, mas recebi: $SECOND_CACHE"
+  exit 1
+fi
+
+echo "OK"
+
+echo "✅ Sprint 3 smoke test passed"

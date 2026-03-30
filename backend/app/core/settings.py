@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jikan_base_url: str = "https://api.jikan.moe/v4"
 
     default_user_email: str = "marcos@local.dev"
+    anime_cache_ttl_hours: int = 24
 
 
 settings = Settings()

@@ -26,6 +26,7 @@ services:
       DATABASE_URL: "postgresql+psycopg://anime:anime@db:5432/anime"
       JIKAN_BASE_URL: "https://api.jikan.moe/v4"
       DEFAULT_USER_EMAIL: "marcos@local.dev"
+      ANIME_CACHE_TTL_HOURS: "24"
     ports:
       - "8000:8000"
     depends_on:
