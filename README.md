@@ -22,15 +22,24 @@ Este projeto consiste no desenvolvimento de uma plataforma web para agregação 
 
 A aplicação está sendo desenvolvida em formato **monorepo**, contendo backend, frontend e infraestrutura, com foco em organização, escalabilidade e boas práticas de desenvolvimento.
 
-Atualmente, o sistema já possui um backend funcional com integração externa, persistência de dados, sistema de favoritos, histórico de buscas e camada de cache local.
+Atualmente, o sistema já possui:
 
-A aplicação será composta por:
+- backend funcional com FastAPI
+- integração com API externa (Jikan)
+- persistência em PostgreSQL
+- sistema de favoritos
+- histórico de buscas
+- camada de cache local com TTL
+- frontend inicial em React + Vite + TypeScript
+- execução local via Docker Compose
+
+A aplicação é composta por:
 
 - Backend em Python com FastAPI
 - Frontend em React
 - Banco de dados PostgreSQL
 - Infraestrutura containerizada com Docker
-- Deploy em ambiente AWS (EC2 ou ECS com Application Load Balancer)
+- Deploy planejado em ambiente AWS (EC2 ou ECS com ALB)
 
 ---
 
@@ -55,7 +64,21 @@ anime-aggregator/
 │   ├── Dockerfile
 │   └── requirements.txt
 │
-├── frontend/                # Aplicação React (em desenvolvimento)
+├── frontend/                # Aplicação React + Vite + TypeScript
+│   ├── src/
+│   │   ├── api/             # Cliente HTTP
+│   │   ├── components/      # Componentes reutilizáveis
+│   │   ├── pages/           # Páginas da aplicação
+│   │   ├── services/        # Serviços para consumo da API
+│   │   ├── types/           # Tipagens TypeScript
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── index.html
+│
 ├── infra/                   # Infraestrutura como código (futuro)
 ├── docker-compose.yml
 ├── smoke-test.sh
@@ -76,10 +99,12 @@ anime-aggregator/
 - Pydantic
 - Swagger/OpenAPI
 
-### Frontend (em desenvolvimento)
+### Frontend
 - React
-- Vite ou Next.js
-- Axios ou Fetch API
+- Vite
+- TypeScript
+- React Router DOM
+- Axios
 
 ### Infraestrutura
 - Docker
@@ -99,7 +124,11 @@ O sistema integra APIs públicas de animes, como:
 - Jikan API (MyAnimeList)
 - Futuramente: AniList GraphQL API
 
-Atualmente, a integração principal implementada é com a **Jikan API**, utilizada para busca, consulta de detalhes e listagem de animes populares.
+Atualmente, a integração principal implementada é com a **Jikan API**, utilizada para:
+
+- busca de animes
+- consulta de detalhes
+- listagem de animes populares
 
 ---
 
@@ -110,13 +139,13 @@ Atualmente, a integração principal implementada é com a **Jikan API**, utiliz
 - Docker
 - Docker Compose
 
-### Subir o ambiente
+### Subir o ambiente completo
 
 ```bash
 docker compose up --build -d
 ```
 
-### Aplicar migrations
+### Aplicar migrations do backend
 
 ```bash
 docker exec -it anime_api alembic upgrade head
@@ -124,8 +153,21 @@ docker exec -it anime_api alembic upgrade head
 
 ### Acessos locais
 
-- API: `http://localhost:8000`
+- API backend: `http://localhost:8000`
 - Swagger/OpenAPI: `http://localhost:8000/docs`
+- Frontend: `http://localhost:5173`
+
+### Logs do frontend
+
+```bash
+docker compose logs -f frontend
+```
+
+### Logs do backend
+
+```bash
+docker compose logs -f api
+```
 
 ---
 
@@ -133,44 +175,59 @@ docker exec -it anime_api alembic upgrade head
 
 ### Sprint 1 — Estrutura inicial e integração externa
 
-- Estruturação inicial do backend com FastAPI
-- Configuração do ambiente com Docker Compose
-- Configuração do PostgreSQL
-- Integração com a API pública Jikan
-- Endpoint de health check
-- Endpoint de busca de animes
-- Endpoint de consulta de anime por ID
-- Endpoint de listagem de animes populares
-- Normalização dos dados externos em formato interno padronizado
-- Documentação automática via Swagger/OpenAPI
+- estruturação inicial do backend com FastAPI
+- configuração do ambiente com Docker Compose
+- configuração do PostgreSQL
+- integração com a API pública Jikan
+- endpoint de health check
+- endpoint de busca de animes
+- endpoint de consulta de anime por ID
+- endpoint de listagem de animes populares
+- normalização dos dados externos em formato interno padronizado
+- documentação automática via Swagger/OpenAPI
 
 ### Sprint 2 — Persistência e funcionalidades do usuário
 
-- Configuração de ORM com SQLAlchemy
-- Controle de migrations com Alembic
-- Criação da tabela de usuários
-- Criação da tabela de favoritos
-- Implementação de criação automática de usuário via header `X-User-Email`
-- Endpoint para adicionar favoritos
-- Endpoint para listar favoritos
-- Endpoint para remover favoritos
-- Validação de duplicidade de favoritos por usuário
-- Criação da tabela de histórico de buscas
-- Registro automático das buscas realizadas
-- Endpoint para listar histórico de buscas
-- Endpoint para remover item do histórico
+- configuração de ORM com SQLAlchemy
+- controle de migrations com Alembic
+- criação da tabela de usuários
+- criação da tabela de favoritos
+- implementação de criação automática de usuário via header `X-User-Email`
+- endpoint para adicionar favoritos
+- endpoint para listar favoritos
+- endpoint para remover favoritos
+- validação de duplicidade de favoritos por usuário
+- criação da tabela de histórico de buscas
+- registro automático das buscas realizadas
+- endpoint para listar histórico de buscas
+- endpoint para remover item do histórico
 
 ### Sprint 3 — Cache, performance e otimização
 
-- Criação da tabela `anime_cache`
-- Persistência local de dados consultados externamente
-- Implementação de cache no endpoint de detalhe de anime
-- Controle de expiração de cache por TTL
-- Política de cache para reduzir chamadas repetidas à API externa
-- Retorno do header `X-Cache` com os estados:
+- criação da tabela `anime_cache`
+- persistência local de dados consultados externamente
+- implementação de cache no endpoint de detalhe de anime
+- controle de expiração de cache por TTL
+- política de cache para reduzir chamadas repetidas à API externa
+- retorno do header `X-Cache` com os estados:
   - `MISS` para primeira consulta
   - `HIT` para consultas posteriores dentro do tempo de validade
-- Atualização da arquitetura para suportar melhor desempenho e resiliência
+- atualização da arquitetura para suportar melhor desempenho e resiliência
+
+### Sprint 4 — Frontend e integração com backend
+
+- inicialização do frontend com React + Vite + TypeScript
+- execução do frontend via Docker
+- configuração de roteamento com React Router DOM
+- configuração de cliente HTTP com Axios
+- tela inicial com top animes
+- tela de busca com paginação
+- tela de detalhe do anime
+- tela de favoritos
+- tela de histórico de buscas
+- integração do frontend com o backend
+- exibição do status de cache no detalhe do anime
+- estrutura inicial de layout e componentes reutilizáveis
 
 ---
 
@@ -192,6 +249,32 @@ docker exec -it anime_api alembic upgrade head
 ### Histórico de busca
 - `GET /search-history`
 - `DELETE /search-history/{history_id}`
+
+---
+
+## 🖥 Funcionalidades do Frontend
+
+O frontend possui as seguintes rotas:
+
+- `/` → página inicial com top animes
+- `/search` → busca de animes com paginação
+- `/anime/:id` → detalhe do anime
+- `/favorites` → listagem de favoritos
+- `/history` → histórico de buscas
+
+### Integração com backend
+
+O frontend consome os endpoints do backend usando:
+
+- `VITE_API_BASE_URL`
+- `VITE_USER_EMAIL`
+
+Exemplo de `.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+VITE_USER_EMAIL=marcos@local.dev
+```
 
 ---
 
@@ -243,30 +326,25 @@ Atualmente, o sistema utiliza PostgreSQL para persistência dos dados da aplica�
 
 ## 📈 Evolução do Projeto
 
-O projeto evoluiu de uma API simples de consumo externo para uma aplicação backend com:
+O projeto evoluiu de uma API simples de consumo externo para uma aplicação full stack inicial com:
 
 - arquitetura organizada por camadas
 - persistência de dados
 - controle de migrations
 - funcionalidades próprias do usuário
 - otimização com cache local
-- testes automatizados de fluxo principal
+- frontend integrado ao backend
+- testes automatizados do fluxo principal
+- execução local totalmente containerizada
 
 ---
 
 ## 🎯 Próximos Passos
 
-### Sprint 4 — Frontend
+### Evoluções previstas
 
-- iniciar a aplicação frontend em React
-- criar layout base da interface
-- implementar tela de busca
-- implementar tela de detalhe do anime
-- implementar tela de favoritos
-- integrar histórico de buscas no frontend
-
-### Evoluções futuras
-
+- refinamento visual do frontend
+- feedback visual mais robusto para loading e erros
 - autenticação real com JWT
 - integração com AniList
 - deploy em AWS
@@ -288,14 +366,14 @@ http://localhost:8000/docs
 
 ## ✅ Status atual
 
-**Backend concluído até a Sprint 3**, contendo:
+**Projeto em evolução até a Sprint 4**, contendo:
 
-- integração com API externa
+- backend funcional com integração externa
 - persistência de dados
 - sistema de favoritos
 - histórico de buscas
 - cache com TTL
 - migrations com Alembic
-- smoke tests automatizados
-
-Frontend e deploy em nuvem seguem como próximas etapas do projeto.
+- frontend inicial em React
+- execução via Docker Compose
+- smoke tests automatizados para o backend

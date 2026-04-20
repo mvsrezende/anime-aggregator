@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://anime:anime@localhost:5432/anime"
     jikan_base_url: str = "https://api.jikan.moe/v4"
 
-    default_user_email: str = "marcos@local.dev"
+    default_user_email: str = "marcos.rezende@al.infnet.edu.br"
     anime_cache_ttl_hours: int = 24
 
 
