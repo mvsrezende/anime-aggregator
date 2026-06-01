@@ -30,8 +30,11 @@ Atualmente, o sistema já possui:
 - sistema de favoritos
 - histórico de buscas
 - camada de cache local com TTL
+- autenticação JWT
+- fallback legado via `X-User-Email`
 - frontend inicial em React + Vite + TypeScript
-- execução local via Docker Compose
+- execução local totalmente via Docker Compose
+- automação de migrations antes da subida da aplicação
 
 A aplicação é composta por:
 
@@ -97,6 +100,8 @@ anime-aggregator/
 - PostgreSQL
 - httpx
 - Pydantic
+- PyJWT
+- bcrypt
 - Swagger/OpenAPI
 
 ### Frontend
@@ -145,11 +150,17 @@ Atualmente, a integração principal implementada é com a **Jikan API**, utiliz
 docker compose up --build -d
 ```
 
-### Aplicar migrations do backend
+### Como funciona a inicialização
 
-```bash
-docker exec -it anime_api alembic upgrade head
-```
+O `docker-compose` executa automaticamente as migrations antes de subir a API e o frontend, por meio de um serviço dedicado de migração.
+
+Fluxo de inicialização:
+
+1. sobe o PostgreSQL
+2. espera o banco ficar saudável
+3. executa `alembic upgrade head`
+4. sobe a API
+5. sobe o frontend
 
 ### Acessos locais
 
@@ -167,6 +178,18 @@ docker compose logs -f frontend
 
 ```bash
 docker compose logs -f api
+```
+
+### Logs da migration automática
+
+```bash
+docker compose logs -f migrate
+```
+
+### Executar migrations manualmente (opcional)
+
+```bash
+docker exec -it anime_api alembic upgrade head
 ```
 
 ---
@@ -229,12 +252,29 @@ docker compose logs -f api
 - exibição do status de cache no detalhe do anime
 - estrutura inicial de layout e componentes reutilizáveis
 
+### Step 5 — Autenticação e automação da inicialização
+
+- autenticação JWT no backend
+- endpoint de registro de usuário
+- endpoint de login
+- endpoint para obtenção do usuário autenticado
+- hash de senha com bcrypt
+- geração e validação de token com JWT
+- suporte temporário a fallback legado via `X-User-Email`
+- automação das migrations no `docker-compose`
+- garantia de subida ordenada entre banco, migration, API e frontend
+
 ---
 
 ## 🔗 Endpoints disponíveis
 
 ### Health
 - `GET /health`
+
+### Auth
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
 
 ### Animes
 - `GET /animes/search?q=&page=&limit=`
@@ -249,6 +289,33 @@ docker compose logs -f api
 ### Histórico de busca
 - `GET /search-history`
 - `DELETE /search-history/{history_id}`
+
+---
+
+## 🔐 Autenticação
+
+O backend suporta autenticação baseada em JWT.
+
+### Fluxo principal
+
+1. registrar usuário em `POST /auth/register`
+2. realizar login em `POST /auth/login`
+3. receber `access_token`
+4. enviar token no header:
+
+```http
+Authorization: Bearer SEU_TOKEN
+```
+
+### Compatibilidade temporária
+
+Enquanto o frontend evolui, o backend ainda aceita o modo legado com:
+
+```http
+X-User-Email: email@exemplo.com
+```
+
+Esse fallback existe apenas para facilitar a transição para o fluxo completo de autenticação.
 
 ---
 
@@ -280,7 +347,7 @@ VITE_USER_EMAIL=marcos@local.dev
 
 ## 🧪 Testes
 
-O projeto possui um **smoke test** automatizado para validar o funcionamento do backend de ponta a ponta.
+O projeto possui um **smoke test** automatizado para validar o funcionamento da aplicação.
 
 ### Executar smoke test
 
@@ -290,17 +357,23 @@ O projeto possui um **smoke test** automatizado para validar o funcionamento do 
 
 ### Cobertura atual do smoke test
 
-- health check
+- health check do backend
+- disponibilidade do frontend
+- registro de usuário
+- login com JWT
+- validação de `/auth/me`
 - busca de animes
 - detalhe de anime
 - listagem de top animes
-- criação de favoritos
+- criação de favoritos com JWT
 - validação de favorito duplicado
 - listagem de favoritos
 - remoção de favoritos
 - registro de histórico de busca
+- remoção de item do histórico
 - validação do último termo buscado
 - validação do cache com fluxo `MISS` → `HIT`
+- validação do fallback legado com `X-User-Email`
 
 ---
 
@@ -333,9 +406,11 @@ O projeto evoluiu de uma API simples de consumo externo para uma aplicação ful
 - controle de migrations
 - funcionalidades próprias do usuário
 - otimização com cache local
+- autenticação JWT
 - frontend integrado ao backend
 - testes automatizados do fluxo principal
 - execução local totalmente containerizada
+- automação de migrations no startup
 
 ---
 
@@ -343,9 +418,11 @@ O projeto evoluiu de uma API simples de consumo externo para uma aplicação ful
 
 ### Evoluções previstas
 
-- refinamento visual do frontend
+- remover gradualmente o fallback legado `X-User-Email`
+- integrar autenticação JWT diretamente no frontend
+- proteger rotas do frontend
+- refinamento visual da interface
 - feedback visual mais robusto para loading e erros
-- autenticação real com JWT
 - integração com AniList
 - deploy em AWS
 - infraestrutura como código
@@ -366,14 +443,17 @@ http://localhost:8000/docs
 
 ## ✅ Status atual
 
-**Projeto em evolução até a Sprint 4**, contendo:
+**Projeto em evolução até o Step 5**, contendo:
 
 - backend funcional com integração externa
 - persistência de dados
 - sistema de favoritos
 - histórico de buscas
 - cache com TTL
+- autenticação JWT
+- fallback legado temporário
 - migrations com Alembic
 - frontend inicial em React
 - execução via Docker Compose
-- smoke tests automatizados para o backend
+- migrations automáticas no startup
+- smoke tests automatizados

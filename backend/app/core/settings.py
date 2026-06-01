@@ -13,5 +13,11 @@ class Settings(BaseSettings):
     default_user_email: str = "marcos.rezende@al.infnet.edu.br"
     anime_cache_ttl_hours: int = 24
 
+    jwt_secret_key: str = "change-this-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 60
+
+    auth_allow_legacy_header: bool = True
+
 
 settings = Settings()

@@ -16,6 +16,27 @@ services:
       timeout: 3s
       retries: 10
 
+  migrate:
+    build:
+      context: ./backend
+    container_name: anime_migrate
+    environment:
+      APP_NAME: "anime-aggregator-api"
+      APP_ENV: "dev"
+      DATABASE_URL: "postgresql+psycopg://anime:anime@db:5432/anime"
+      JIKAN_BASE_URL: "https://api.jikan.moe/v4"
+      DEFAULT_USER_EMAIL: "marcos.rezende@al.infnet.edu.br"
+      ANIME_CACHE_TTL_HOURS: "24"
+      JWT_SECRET_KEY: "substitua-pelo-mesmo-valor-que-você-já-usa"
+      JWT_ALGORITHM: "HS256"
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      AUTH_ALLOW_LEGACY_HEADER: "true"
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build:
       context: ./backend
@@ -27,11 +48,17 @@ services:
       JIKAN_BASE_URL: "https://api.jikan.moe/v4"
       DEFAULT_USER_EMAIL: "marcos.rezende@al.infnet.edu.br"
       ANIME_CACHE_TTL_HOURS: "24"
+      JWT_SECRET_KEY: "3UvZ6AmVdN2jtEeOH72E43w8YeGVFn829c4Gzk8z3dG"
+      JWT_ALGORITHM: "HS256"
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+      AUTH_ALLOW_LEGACY_HEADER: "true"
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   frontend:
     build:
@@ -47,7 +74,8 @@ services:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
     depends_on:
-      - api
+      api:
+        condition: service_started
 
 volumes:
   pgdata:
