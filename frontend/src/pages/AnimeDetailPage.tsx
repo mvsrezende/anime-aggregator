@@ -3,9 +3,15 @@ import { useParams } from "react-router-dom";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorState } from "../components/ErrorState";
 import { Loading } from "../components/Loading";
+import { StatusAlert } from "../components/StatusAlert";
 import { getAnimeDetail } from "../services/animes";
 import { createFavorite } from "../services/favorites";
 import type { AnimeListItem } from "../types/anime";
+
+type FeedbackState = {
+  type: "success" | "error";
+  message: string;
+} | null;
 
 export function AnimeDetailPage() {
   const { id } = useParams();
@@ -15,7 +21,8 @@ export function AnimeDetailPage() {
   const [cacheStatus, setCacheStatus] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [favoriteMessage, setFavoriteMessage] = useState("");
+  const [favoriteSubmitting, setFavoriteSubmitting] = useState(false);
+  const [favoriteFeedback, setFavoriteFeedback] = useState<FeedbackState>(null);
 
   useEffect(() => {
     async function load() {
@@ -41,11 +48,21 @@ export function AnimeDetailPage() {
     if (!anime) return;
 
     try {
+      setFavoriteSubmitting(true);
+      setFavoriteFeedback(null);
       await createFavorite(anime);
-      setFavoriteMessage("Anime adicionado aos favoritos com sucesso.");
+      setFavoriteFeedback({
+        type: "success",
+        message: "Anime adicionado aos favoritos com sucesso.",
+      });
     } catch (err: any) {
       const detail = err?.response?.data?.detail;
-      setFavoriteMessage(detail ?? "Não foi possível adicionar aos favoritos.");
+      setFavoriteFeedback({
+        type: "error",
+        message: detail ?? "Não foi possível adicionar aos favoritos.",
+      });
+    } finally {
+      setFavoriteSubmitting(false);
     }
   }
 
@@ -65,12 +82,36 @@ export function AnimeDetailPage() {
 
       <div className="detail-content">
         <h1>{anime.title}</h1>
-        {anime.title_japanese && <p><strong>Título japonês:</strong> {anime.title_japanese}</p>}
-        {anime.score && <p><strong>Score:</strong> {anime.score}</p>}
-        {anime.year && <p><strong>Ano:</strong> {anime.year}</p>}
-        {anime.episodes && <p><strong>Episódios:</strong> {anime.episodes}</p>}
-        {anime.status && <p><strong>Status:</strong> {anime.status}</p>}
-        {cacheStatus && <p><strong>Cache:</strong> {cacheStatus}</p>}
+        {anime.title_japanese && (
+          <p>
+            <strong>Título japonês:</strong> {anime.title_japanese}
+          </p>
+        )}
+        {anime.score && (
+          <p>
+            <strong>Score:</strong> {anime.score}
+          </p>
+        )}
+        {anime.year && (
+          <p>
+            <strong>Ano:</strong> {anime.year}
+          </p>
+        )}
+        {anime.episodes && (
+          <p>
+            <strong>Episódios:</strong> {anime.episodes}
+          </p>
+        )}
+        {anime.status && (
+          <p>
+            <strong>Status:</strong> {anime.status}
+          </p>
+        )}
+        {cacheStatus && (
+          <p>
+            <strong>Cache:</strong> {cacheStatus}
+          </p>
+        )}
 
         {anime.genres.length > 0 && (
           <p>
@@ -86,18 +127,32 @@ export function AnimeDetailPage() {
         )}
 
         <div className="actions">
-          <button className="button" onClick={handleFavorite}>
-            Adicionar aos favoritos
+          <button
+            className="button"
+            onClick={handleFavorite}
+            disabled={favoriteSubmitting}
+          >
+            {favoriteSubmitting ? "Adicionando..." : "Adicionar aos favoritos"}
           </button>
 
           {anime.url && (
-            <a className="button secondary" href={anime.url} target="_blank" rel="noreferrer">
+            <a
+              className="button secondary"
+              href={anime.url}
+              target="_blank"
+              rel="noreferrer"
+            >
               Ver no MyAnimeList
             </a>
           )}
         </div>
 
-        {favoriteMessage && <p className="feedback">{favoriteMessage}</p>}
+        {favoriteFeedback && (
+          <StatusAlert
+            variant={favoriteFeedback.type}
+            message={favoriteFeedback.message}
+          />
+        )}
       </div>
     </section>
   );

@@ -3,8 +3,11 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:8000}"
 FRONTEND_URL="${FRONTEND_URL:-http://localhost:5173}"
-TEST_USER_EMAIL="${TEST_USER_EMAIL:-smoke-test@local.dev}"
+TEST_USER_EMAIL="${TEST_USER_EMAIL:-smoke-test-$(date +%s)@local.dev}"
 TEST_USER_PASSWORD="${TEST_USER_PASSWORD:-123456}"
+
+TMP_REGISTER_FILE="$(mktemp)"
+trap 'rm -f "$TMP_REGISTER_FILE"' EXIT
 
 echo "==> Backend health"
 curl -fsS "$BASE_URL/health" >/dev/null
@@ -18,8 +21,24 @@ if [ "$FRONTEND_STATUS" != "200" ]; then
 fi
 echo "OK"
 
+echo "==> Frontend login page should be reachable"
+LOGIN_PAGE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/login")
+if [ "$LOGIN_PAGE_STATUS" != "200" ]; then
+  echo "Página /login não respondeu com 200. HTTP: $LOGIN_PAGE_STATUS"
+  exit 1
+fi
+echo "OK"
+
+echo "==> Frontend register page should be reachable"
+REGISTER_PAGE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/register")
+if [ "$REGISTER_PAGE_STATUS" != "200" ]; then
+  echo "Página /register não respondeu com 200. HTTP: $REGISTER_PAGE_STATUS"
+  exit 1
+fi
+echo "OK"
+
 echo "==> Register user (201 or 409)"
-REGISTER_STATUS=$(curl -s -o /tmp/register_response.json -w "%{http_code}" \
+REGISTER_STATUS=$(curl -s -o "$TMP_REGISTER_FILE" -w "%{http_code}" \
   -X POST "$BASE_URL/auth/register" \
   -H "Content-Type: application/json" \
   -d "{
@@ -29,7 +48,7 @@ REGISTER_STATUS=$(curl -s -o /tmp/register_response.json -w "%{http_code}" \
 
 if [ "$REGISTER_STATUS" != "201" ] && [ "$REGISTER_STATUS" != "409" ]; then
   echo "Falha no register. HTTP: $REGISTER_STATUS"
-  cat /tmp/register_response.json
+  cat "$TMP_REGISTER_FILE"
   exit 1
 fi
 echo "OK"
@@ -250,4 +269,4 @@ if [ "$LEGACY_STATUS" != "200" ]; then
 fi
 echo "OK"
 
-echo "✅ Full smoke test passed"
+echo "✅ Final smoke test passed"

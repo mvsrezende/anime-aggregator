@@ -29,16 +29,10 @@ export function Layout() {
             <NavLink to="/history" className="nav-link">
               Histórico
             </NavLink>
-
             {!isAuthenticated && (
-              <>
-                <NavLink to="/login" className="nav-link">
-                  Login
-                </NavLink>
-                <NavLink to="/register" className="nav-link">
-                  Criar conta
-                </NavLink>
-              </>
+              <NavLink to="/login" className="nav-link">
+                Login
+              </NavLink>
             )}
           </nav>
 

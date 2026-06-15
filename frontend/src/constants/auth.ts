@@ -1,0 +1,1 @@
+export const AUTH_TOKEN_STORAGE_KEY = "anime_aggregator_access_token";

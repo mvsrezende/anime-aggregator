@@ -30,11 +30,14 @@ Atualmente, o sistema já possui:
 - sistema de favoritos
 - histórico de buscas
 - camada de cache local com TTL
-- autenticação JWT
+- autenticação JWT no backend e no frontend
 - fallback legado via `X-User-Email`
-- frontend inicial em React + Vite + TypeScript
+- frontend em React + Vite + TypeScript
+- rotas protegidas no frontend
+- login, registro e logout
 - execução local totalmente via Docker Compose
 - automação de migrations antes da subida da aplicação
+- smoke test automatizado cobrindo backend, frontend e autenticação
 
 A aplicação é composta por:
 
@@ -71,6 +74,8 @@ anime-aggregator/
 │   ├── src/
 │   │   ├── api/             # Cliente HTTP
 │   │   ├── components/      # Componentes reutilizáveis
+│   │   ├── constants/       # Constantes da aplicação
+│   │   ├── context/         # Contexto de autenticação
 │   │   ├── pages/           # Páginas da aplicação
 │   │   ├── services/        # Serviços para consumo da API
 │   │   ├── types/           # Tipagens TypeScript
@@ -110,12 +115,15 @@ anime-aggregator/
 - TypeScript
 - React Router DOM
 - Axios
+- Context API
+- LocalStorage para persistência do token JWT
 
 ### Infraestrutura
 - Docker
 - Docker Compose
 - AWS EC2 ou AWS ECS
-- Application Load Balancer (ALB)
+- AWS ALB
+- AWS ACM
 
 ### Banco de Dados
 - PostgreSQL 16
@@ -264,6 +272,18 @@ docker exec -it anime_api alembic upgrade head
 - automação das migrations no `docker-compose`
 - garantia de subida ordenada entre banco, migration, API e frontend
 
+### Sprint Final — Fechamento para entrega
+
+- integração da autenticação JWT ao frontend
+- criação de tela de login
+- criação de tela de registro
+- persistência do token JWT no navegador
+- proteção das rotas de favoritos e histórico
+- implementação de logout
+- melhoria do feedback visual para login, favoritos e ações do usuário
+- consolidação do smoke test final
+- refinamento da documentação para entrega
+
 ---
 
 ## 🔗 Endpoints disponíveis
@@ -324,10 +344,22 @@ Esse fallback existe apenas para facilitar a transição para o fluxo completo d
 O frontend possui as seguintes rotas:
 
 - `/` → página inicial com top animes
+- `/login` → autenticação do usuário
+- `/register` → criação de conta
 - `/search` → busca de animes com paginação
 - `/anime/:id` → detalhe do anime
-- `/favorites` → listagem de favoritos
-- `/history` → histórico de buscas
+- `/favorites` → listagem de favoritos protegida por autenticação
+- `/history` → histórico de buscas protegido por autenticação
+
+### Funcionalidades implementadas no frontend
+
+- login com JWT
+- registro de usuário
+- logout
+- rotas protegidas
+- feedback visual de sucesso e erro
+- armazenamento do token no navegador
+- fallback para modo visitante enquanto necessário
 
 ### Integração com backend
 
@@ -340,7 +372,7 @@ Exemplo de `.env`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000
-VITE_USER_EMAIL=marcos@local.dev
+VITE_USER_EMAIL=marcos.rezende@al.infnet.edu.br
 ```
 
 ---
@@ -358,7 +390,8 @@ O projeto possui um **smoke test** automatizado para validar o funcionamento da 
 ### Cobertura atual do smoke test
 
 - health check do backend
-- disponibilidade do frontend
+- disponibilidade da home do frontend
+- disponibilidade das páginas `/login` e `/register`
 - registro de usuário
 - login com JWT
 - validação de `/auth/me`
@@ -399,7 +432,7 @@ Atualmente, o sistema utiliza PostgreSQL para persistência dos dados da aplica�
 
 ## 📈 Evolução do Projeto
 
-O projeto evoluiu de uma API simples de consumo externo para uma aplicação full stack inicial com:
+O projeto evoluiu de uma API simples de consumo externo para uma aplicação full stack com:
 
 - arquitetura organizada por camadas
 - persistência de dados
@@ -408,26 +441,36 @@ O projeto evoluiu de uma API simples de consumo externo para uma aplicação ful
 - otimização com cache local
 - autenticação JWT
 - frontend integrado ao backend
+- rotas protegidas
 - testes automatizados do fluxo principal
 - execução local totalmente containerizada
 - automação de migrations no startup
 
 ---
 
+## ☁️ Infraestrutura planejada para entrega
+
+A estratégia de publicação definida para o projeto é:
+
+- aplicação executando em uma instância **AWS EC2**
+- serviços orquestrados via **Docker Compose**
+- entrada de tráfego por **Application Load Balancer (ALB)**
+- certificado TLS via **AWS ACM**
+- publicação segura por HTTPS
+
+---
+
 ## 🎯 Próximos Passos
 
-### Evoluções previstas
+### Evoluções futuras
 
 - remover gradualmente o fallback legado `X-User-Email`
-- integrar autenticação JWT diretamente no frontend
-- proteger rotas do frontend
-- refinamento visual da interface
-- feedback visual mais robusto para loading e erros
+- refinamento visual adicional da interface
 - integração com AniList
 - deploy em AWS
 - infraestrutura como código
 - observabilidade e monitoramento
-- melhoria da experiência de usuário no frontend
+- melhoria contínua da experiência de usuário
 
 ---
 
@@ -443,7 +486,7 @@ http://localhost:8000/docs
 
 ## ✅ Status atual
 
-**Projeto em evolução até o Step 5**, contendo:
+**Projeto finalizado para entrega**, contendo:
 
 - backend funcional com integração externa
 - persistência de dados
@@ -453,7 +496,8 @@ http://localhost:8000/docs
 - autenticação JWT
 - fallback legado temporário
 - migrations com Alembic
-- frontend inicial em React
+- frontend em React com login e registro
+- rotas protegidas
 - execução via Docker Compose
 - migrations automáticas no startup
 - smoke tests automatizados
